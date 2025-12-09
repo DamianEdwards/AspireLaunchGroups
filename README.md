@@ -4,6 +4,8 @@ Spike of a feature for Aspire that enables defining launch groups that resources
 
 Adapted from the [Aspire Shop sample](https://github.com/dotnet/aspire-samples/tree/main/samples/aspire-shop).
 
+https://github.com/user-attachments/assets/99ab0430-4c31-4ae7-9640-ca0a19a2ea8d
+
 ## Overview
 
 Launch groups allow you to organize your Aspire resources into logical groups, enabling selective startup of only the resources you need for a particular development scenario. Resources not in the active launch group will require explicit manual start from the Aspire dashboard.
