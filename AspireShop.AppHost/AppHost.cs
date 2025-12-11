@@ -1,7 +1,7 @@
 ﻿var builder = DistributedApplication.CreateBuilder(args);
 
 // Workaround issues with concurrent runtime building of C# apps
-builder.SerialilzeCSharpAppBuilds();
+builder.SerializeCSharpAppBuilds();
 
 // Define valid launch groups. Can be passed here as parameters but will also be read from IConfiguration
 builder.AddLaunchGroups();
