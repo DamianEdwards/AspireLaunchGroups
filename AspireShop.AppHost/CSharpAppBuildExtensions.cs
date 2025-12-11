@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Aspire.Hosting;
 
-internal static class CSharpAppBuildExtensions
+internal static partial class CSharpAppBuildExtensions
 {
     /// <summary>
     /// Ensures that CSharpAppResource builds are serialized so that only one build happens at a time.
@@ -30,7 +30,7 @@ internal static class CSharpAppBuildExtensions
         return builder;
     }
 
-    class CSharpAppResourceBuildSerializer(ResourceLoggerService resourceLoggerService, ResourceNotificationService resourceNotificationService)
+    partial class CSharpAppResourceBuildSerializer(ResourceLoggerService resourceLoggerService, ResourceNotificationService resourceNotificationService)
     {
         private readonly SemaphoreSlim _buildSemaphore = new(1, 1);
 
@@ -49,22 +49,22 @@ internal static class CSharpAppBuildExtensions
                 }
                 await _buildSemaphore.WaitAsync(ct);
 
-                // Unblock resource from starting
-                tcs.SetResult();
-
                 if (logger.IsEnabled(LogLevel.Information))
                 {
                     logger.LogInformation("Finished waiting for build turn.");
                     logger.LogInformation("Waiting for resource '{ResourceName}' to finish building before releasing build turn.", project.Name);
                 }
 
+                var logTask = WaitForLogAsync(project, "info:", ct);
                 var healthyTask = resourceNotificationService.WaitForResourceHealthyAsync(project.Name, ct);
                 // Note: We have to wait for NotStarted as well as Running because resources will transition to NotStarted if they're set to explicitly start.
                 var terminalStateTask = resourceNotificationService.WaitForResourceAsync(
                     project.Name,
                     [KnownResourceStates.NotStarted, ..KnownResourceStates.TerminalStates],
                     ct);
-                var logTask = WaitForLogAsync(project, "info:", ct);
+
+                // Unblock resource from starting
+                tcs.SetResult();
 
                 var completedTask = await Task.WhenAny(healthyTask, terminalStateTask, logTask);
 
@@ -76,7 +76,7 @@ internal static class CSharpAppBuildExtensions
                     {
                         _ when completedTask == healthyTask => "became healthy",
                         _ when completedTask == terminalStateTask => $"reached the {terminalStateTask.Result} state",
-                        _ when completedTask == logTask => "logged info",
+                        _ when completedTask == logTask => "logged 'info:'",
                         _ => "completed"
                     };
                     logger.LogInformation(
@@ -93,11 +93,19 @@ internal static class CSharpAppBuildExtensions
         {
             await foreach (var entry in resourceLoggerService.WatchAsync(resource).WithCancellation(cancellationToken))
             {
-                if (entry.Any(line => line.Content.Contains(log, StringComparison.OrdinalIgnoreCase)))
+                if (entry.Any(line => StripAnsiCodes(line.Content).Contains(log, StringComparison.OrdinalIgnoreCase)))
                 {
                     break;
                 }
             }
         }
+
+        private static string StripAnsiCodes(string input)
+        {
+            return AnsiCodesRegex().Replace(input, string.Empty);
+        }
+
+        [System.Text.RegularExpressions.GeneratedRegex(@"\x1B\[[0-9;]*[A-Za-z]")]
+        private static partial System.Text.RegularExpressions.Regex AnsiCodesRegex();
     }
 }
