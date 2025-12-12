@@ -1,7 +1,7 @@
 ﻿var builder = DistributedApplication.CreateBuilder(args);
 
-// Workaround issues with concurrent runtime building of C# apps
-builder.SerializeCSharpAppBuilds();
+// Ensure relevant projects in the current launch group are built at AppHost startup time or before they're explicitly started
+builder.AddProjectBuildSupport(enableRestore: true, captureBinLog: false);
 
 // Define valid launch groups. Can be passed here as parameters but will also be read from IConfiguration
 builder.AddLaunchGroups();
@@ -24,25 +24,25 @@ var basketCache = builder.AddRedis("basketcache")
     .WithRedisCommander()
     .WithLaunchGroups("basket", "frontend");
 
-var catalogDbManager = builder.AddCSharpApp("catalogdbmanager", "../AspireShop.CatalogDbManager")
+var catalogDbManager = builder.AddProject("catalogdbmanager", "../AspireShop.CatalogDbManager")
     .WithReference(catalogDb)
     .WaitFor(catalogDb)
     .WithHttpHealthCheck("/health")
     .WithHttpCommand("/reset-db", "Reset Database", commandOptions: new() { IconName = "DatabaseLightning" })
     .WithLaunchGroups("catalog", "frontend");
 
-var catalogService = builder.AddCSharpApp("catalogservice", "../AspireShop.CatalogService")
+var catalogService = builder.AddProject("catalogservice", "../AspireShop.CatalogService")
     .WithReference(catalogDb)
     .WaitFor(catalogDbManager)
     .WithHttpHealthCheck("/health")
     .WithLaunchGroups("catalog", "frontend");
 
-var basketService = builder.AddCSharpApp("basketservice", "../AspireShop.BasketService")
+var basketService = builder.AddProject("basketservice", "../AspireShop.BasketService")
     .WithReference(basketCache)
     .WaitFor(basketCache)
     .WithLaunchGroups("basket", "frontend");
 
-builder.AddCSharpApp("frontend", "../AspireShop.Frontend")
+builder.AddProject("frontend", "../AspireShop.Frontend")
     .WithExternalHttpEndpoints()
     .WithUrlForEndpoint("https", url => url.DisplayText = "Online Store (HTTPS)")
     .WithUrlForEndpoint("http", url => url.DisplayText = "Online Store (HTTP)")

@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.0.2" />
     <PackageReference Include="Aspire.Hosting.Redis" Version="13.0.2" />
+    <PackageReference Include="NuGet.Frameworks" Version="6.12.1" />
     <!-- Don't use project references here so we can allow selective starting of services with launch groups -->
     <!--
     <ProjectReference Include="..\AspireShop.BasketService\AspireShop.BasketService.csproj" />
