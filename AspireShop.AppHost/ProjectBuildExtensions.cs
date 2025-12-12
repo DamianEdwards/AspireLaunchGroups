@@ -18,12 +18,19 @@ namespace Aspire.Hosting;
 internal static class ProjectBuildExtensions
 {
     /// <summary>
-    /// Enables build synchronization for all <see cref="ProjectResource"/> instances.
+    /// Enables runtime build management for all <see cref="ProjectResource"/> instances.
     /// </summary>
     /// <remarks>
     /// <para>
     /// This approach builds all projects in the active launch group at startup,
-    /// and coordinates individual project builds when resources are started explicitly.
+    /// and coordinates individual project builds when resources are started explicitly. If no launch group
+    /// is active, all projects are built.
+    /// </para>
+    /// <para>
+    /// When combined with removing <c>&gt;ProjectReference /&gt;</c> items from the AppHost project file and using
+    /// <see cref="ProjectResourceBuilderExtensions.AddProject(IDistributedApplicationBuilder, string, string)"/> to
+    /// define project resources, this allows the AppHost to start faster, and selective starting of services based on launch groups
+    /// while ensuring that relevant projects are built as needed.
     /// </para>
     /// </remarks>
     /// <param name="builder">The distributed application builder.</param>
