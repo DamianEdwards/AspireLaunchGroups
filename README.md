@@ -88,7 +88,7 @@ You can also configure valid launch groups via configuration by setting the `Lau
 To assign a resource to a single launch group, use `WithLaunchGroup()`:
 
 ```csharp
-builder.AddCSharpApp("frontend", "../AspireShop.Frontend")
+builder.AddProject("frontend", "../AspireShop.Frontend")
     .WithLaunchGroup("frontend");
 ```
 
@@ -100,7 +100,7 @@ To assign a resource to multiple launch groups, use `WithLaunchGroups()`:
 var postgres = builder.AddPostgres("postgres")
     .WithLaunchGroups("catalog", "basket", "frontend");
 
-var catalogService = builder.AddCSharpApp("catalogservice", "../AspireShop.CatalogService")
+var catalogService = builder.AddProject("catalogservice", "../AspireShop.CatalogService")
     .WithLaunchGroups("catalog", "frontend");
 ```
 
@@ -166,13 +166,7 @@ Add the `LaunchGroup` setting to `appsettings.json` or `appsettings.Development.
 Pass the launch group as a command line argument when running the AppHost:
 
 ```bash
-dotnet run -- LaunchGroup=frontend
-```
-
-Or with a specific launch profile:
-
-```bash
-dotnet run --launch-profile "Default" -- LaunchGroup=catalog
+aspire run -- LaunchGroup=frontend
 ```
 
 ## Behavior
@@ -215,17 +209,17 @@ var basketCache = builder.AddRedis("basketcache")
     .WithLaunchGroups("basket", "frontend");
 
 // Catalog services - needed for catalog and frontend work
-var catalogService = builder.AddCSharpApp("catalogservice", "../AspireShop.CatalogService")
+var catalogService = builder.AddProject("catalogservice", "../AspireShop.CatalogService")
     .WithReference(catalogDb)
     .WithLaunchGroups("catalog", "frontend");
 
 // Basket service - needed for basket and frontend work
-var basketService = builder.AddCSharpApp("basketservice", "../AspireShop.BasketService")
+var basketService = builder.AddProject("basketservice", "../AspireShop.BasketService")
     .WithReference(basketCache)
     .WithLaunchGroups("basket", "frontend");
 
 // Frontend - only in frontend launch group
-builder.AddCSharpApp("frontend", "../AspireShop.Frontend")
+builder.AddProject("frontend", "../AspireShop.Frontend")
     .WithReference(basketService)
     .WithReference(catalogService)
     .WithLaunchGroup("frontend");
